@@ -1,4 +1,5 @@
 local miniwords = require('polyword.miniwords')
+local vim = require('polyword.vim')
 
 local M = {}
 
@@ -51,7 +52,7 @@ function M.transform(transform_type)
 
     if word_split ~= nil and transform_func ~= nil then
 	local new_text = transform_func(word_split)
-	vim.api.nvim_buf_set_text(0, word_split.line-1, word_split.startcol-1, word_split.line-1, word_split.endcol, {new_text})
+	vim.setline(word_split.line, word_split.startcol, word_split.endcol, new_text)
     end
 end
 

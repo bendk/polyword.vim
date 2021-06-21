@@ -1,27 +1,28 @@
+local vim = require('polyword.vim')
 local M = {}
-
-local esc = vim.fn.nr2char(27)
 
 function M.get_options(opts, defaults)
     if opts == nil then
 	return defaults 
     else
-	return vim.tbl_extend('keep', opts, defaults)
+	for key, value in pairs(defaults) do
+	    if opts[key] == nil then opts[key] = value end
+	end
+	return opts
     end
 end
 
 function M.visual_select(startline, startcol, endline, endcol)
     -- Leave visual mode if it's currently selected
-    vim.cmd('normal! ' .. esc)
-    vim.fn.setpos('.', {0, startline, startcol, 0})
+    vim.setpos('.', {0, startline, startcol, 0})
     vim.cmd("normal! v")
-    vim.fn.setpos('.', {0, endline, endcol, 0})
+    vim.setpos('.', {0, endline, endcol, 0})
 end
 
 function M.visual_select_with_command(command)
     -- Leave visual mode if it's currently selected, then go back to visual
     -- mode and run the command
-    vim.cmd('normal! ' .. esc .. 'v' .. command)
+    vim.cmd('normal! ' .. 'v' .. command)
 end
 
 -- Which commands are motions?

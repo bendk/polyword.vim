@@ -1,5 +1,6 @@
 local re = require('polyword/re')
 local utils = require('polyword/utils')
+local vim = require('polyword/vim')
 local M = {}
 
 -- Name that's been parsed into individual mini-words
@@ -28,31 +29,31 @@ function Name:iter_word_pos(idx)
 end
 
 function Name:motion_forward(pos_iter)
-    local col = vim.fn.col('.')
+    local col = vim.col('.')
     for pos in pos_iter do
 	if pos > col then
-	    vim.fn.setpos('.', {0, self.line, pos, 0})
+	    vim.setpos('.', {0, self.line, pos, 0})
 	    return
 	end
     end
-    vim.fn.setpos('.', {0, self.line, self.endcol + 1, 0})
+    vim.setpos('.', {0, self.line, self.endcol + 1, 0})
 end
 
 function Name:motion_backward(pos_iter)
-    local col = vim.fn.col('.')
+    local col = vim.col('.')
     local move_to = nil
     for pos in pos_iter do
 	if pos < col then move_to = pos else break end
     end
     if move_to ~= nil then
-	vim.fn.setpos('.', {0, self.line, move_to, 0})
+	vim.setpos('.', {0, self.line, move_to, 0})
     else
-    vim.fn.setpos('.', {0, self.line, self.startcol - 1, 0})
+    vim.setpos('.', {0, self.line, self.startcol - 1, 0})
     end
 end
 
 function Name:text_object(extend)
-    local col = vim.fn.col('.')
+    local col = vim.col('.')
     for i, word in pairs(self.words) do
 	if word[1] <= col and word[2] >= col then
 	    local startcol = word[1]
@@ -73,49 +74,59 @@ end
 local name_type_patterns = {
     camel = {
 	valid_chars = re.alphanumeric,
-	tester = re.Matcher:new(re.or_(
+	tester = re.or_(
 	    -- aA transition anywhere
-	    re.lowercase .. re.uppercase,
+	    re.cursor .. re.plus(re.lowercase) .. re.uppercase,
 	    -- Aa transition anywhere after the first char
-	    re.uppercase .. re.lowercase
-	)),
-	word_matcher = re.Matcher:new(re.dot .. re.star(re.lowernumeric)),
+	    re.cursor .. re.plus(re.uppercase) .. re.lowercase
+	),
+	find_start = re.cursor .. re.dot,
+	find_end = re.cursor .. re.question(re.uppercase) .. re.star(re.lowernumeric),
     },
     snake = {
 	valid_chars = re.any_char('[:upper:][:lower:][:digit:]_'),
-	word_matcher = re.Matcher:new(re.lookbehind(re.star('_')) .. re.plus(re.alphanumeric)),
+	find_start = re.cursor .. re.star('_') .. re.alphanumeric,
+	find_end = re.cursor .. re.plus(re.alphanumeric),
     },
     kebab = {
 	valid_chars = re.any_char('[:upper:][:lower:][:digit:]-'),
-	word_matcher = re.Matcher:new(re.lookbehind(re.star('-')) .. re.plus(re.alphanumeric)),
+	find_start = re.cursor .. re.star('-') .. re.alphanumeric,
+	find_end = re.cursor .. re.plus(re.alphanumeric),
     },
 }
 
-local function parse_type(name)
-    local patterns = name_type_patterns[name]
+local function parse_type(type_name)
+    local patterns = name_type_patterns[type_name]
     local startpos = re.searchpos(re.star(patterns.valid_chars) .. re.cursor .. patterns.valid_chars, 'bcn')
     local endpos = re.searchpos(re.cursor .. re.plus(patterns.valid_chars), 'ecn')
-    local config = {
+    local name = {
 	line = startpos[1],
 	startcol = startpos[2],
 	endcol = endpos[2],
 	words = {},
     }
-    if config.startcol == 0 or config.endcol == 0 then return end
-    local pos = config.startcol
-    local after_end = config.endcol + 1
-    if patterns.tester and not patterns.tester:match_line(config.line, pos, after_end) then return nil end
-    while true do
-	local match = patterns.word_matcher:match_line(config.line, pos, after_end)
-	if match == nil then
-	    break
-	else
-	    table.insert(config.words, {match[1], match[2]-1})
-	    -- Subtract 1 to make the endcol inside the word rather than after it
-	    pos = match[2]
-	end
+    if name.startcol == 0 or name.endcol == 0 then return end
+
+    local view = vim.winsaveview()
+    local pos = name.startcol
+    vim.setpos('.', {0, view.lnum, pos})
+    if patterns.tester and not re.search(patterns.tester, 'cn') then
+	vim.winrestview(view)
+	return nil
     end
-    if #config.words >= 2 then return Name:new(config) else return nil end
+    while pos <= name.endcol do
+	vim.setpos('.', {0, view.lnum, pos})
+
+	local startcol = re.searchpos(patterns.find_start, 'ce')[2]
+	if startcol == 0 then break end
+	local endcol = re.searchpos(patterns.find_end, 'ce')[2]
+	if endcol == 0 then break end
+	table.insert(name.words, {startcol, endcol})
+	pos = endcol + 1
+    end
+
+    vim.winrestview(view)
+    if #name.words >= 2 then return Name:new(name) else return nil end
 end
 
 M.type_order = {"camel", "snake", "kebab"}
@@ -128,7 +139,7 @@ local any_name_char = re.any_char('[:upper:][:lower:][:digit:]_-')
 
 function M.get_name(direction)
     local rv = nil
-    local startpos = vim.fn.getpos('.')
+    local view = vim.winsaveview()
     if direction == 'backward' then
 	re.search(any_name_char, 'bc')
     elseif direction == 'forward' then
@@ -142,7 +153,7 @@ function M.get_name(direction)
 	    break
 	end
     end
-    vim.fn.setpos('.', startpos)
+    vim.winrestview(view)
     return rv
 end
 
@@ -184,7 +195,7 @@ function M.split_word_at_cursor()
     local name = M.get_name()
     if name == nil then return nil end
 
-    local line = vim.fn.getline('.')
+    local line = vim.getline('.')
     local words = {}
     for _, wordpos in pairs(name.words) do
 	table.insert(words, line:sub(wordpos[1], wordpos[2]))

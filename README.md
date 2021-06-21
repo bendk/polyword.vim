@@ -4,6 +4,10 @@ If you use vim, you know and love its word commands (`w`, `b`, `daw`, ...).
 However, sometimes the vim word does not match the words you're working with.
 This plugin fills in the gaps.
 
+Compatible with:
+  - nvim (0.5-dev)
+  - vim (8.2 and maybe before)
+
 # Miniwords
 
 Use miniwords when a vim word is too big, like when you want to navigate by

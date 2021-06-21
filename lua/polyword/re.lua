@@ -1,4 +1,5 @@
 local utils = require('polyword/utils')
+local vim = require('polyword/vim')
 
 local M = {}
 
@@ -92,7 +93,7 @@ function M.search(pattern, flags)
     -- For forward searches, start from the cursor position
     flags = 'W' .. flags
     if flags:find('b') == nil then flags = 'z' .. flags end
-    return vim.fn.search(pattern, flags) ~= 0
+    return vim.search(pattern, flags) ~= 0
 end
 
 function M.searchpos(pattern, flags)
@@ -100,30 +101,7 @@ function M.searchpos(pattern, flags)
     flags = 'W' .. flags
     -- For forward searches, start from the cursor position
     if flags:find('b') == nil then flags = 'z' .. flags end
-    return vim.fn.searchpos(pattern, flags)
-end
-
--- Create a matcher object, which can be used to match a pattern against editor text
-M.Matcher = {}
-M.Matcher.__index = M.Matcher
-
-function M.Matcher:new(pattern)
-    return setmetatable({
-	regex = vim.regex(normalize .. pattern)
-    }, self)
-end
-
-function M.Matcher:match_line(row, startcol, endcol)
-    -- Convert from 1-based to 0-based
-    row = row - 1
-    if startcol ~= nil then startcol = startcol - 1 end
-    if endcol ~= nil then endcol = endcol - 1 end
-    local match_start, match_end = self.regex:match_line(0, row, startcol, endcol)
-    if match_start == nil then
-	return nil
-    else
-	return { startcol + match_start + 1, startcol + match_end + 1 } -- Convert from 0-based to 1-based
-    end
+    return vim.searchpos(pattern, flags)
 end
 
 return M
