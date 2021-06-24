@@ -10,9 +10,9 @@ function M.megaword(command)
     vim.opt_append('iskeyword', ':')
 
     if utils.command_is_motion(command) then
-	vim.cmd('normal! ' .. command)
+        vim.cmd('normal! ' .. command)
     elseif utils.command_is_text_object(command) then
-	utils.visual_select_with_command(command)
+        utils.visual_select_with_command(command)
     end
     vim.opt_set('iskeyword', old_iskeyword)
 end

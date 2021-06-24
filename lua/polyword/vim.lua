@@ -19,41 +19,41 @@ if on_nvim then
     M.cmd = vim.cmd
 
     function M.setline(line, startcol, endcol, new_text)
-	vim.api.nvim_buf_set_text(0, line-1, startcol-1, line-1, endcol, {new_text})
+        vim.api.nvim_buf_set_text(0, line-1, startcol-1, line-1, endcol, {new_text})
     end
 
     function M.opt_get(name)
-	return vim.opt[name]
+        return vim.opt[name]
     end
 
     function M.opt_append(name, value)
-	return vim.opt[name]:append(value)
+        return vim.opt[name]:append(value)
     end
 
     function M.opt_set(name, value)
-	vim.opt[name] = value
+        vim.opt[name] = value
     end
 else
     function M.setpos(where, pos)
-	vim.fn.setpos(where, vim.list(pos))
+        vim.fn.setpos(where, vim.list(pos))
     end
     M.cmd = vim.command
     function M.setline(line, startcol, endcol, new_text)
-	local line_text = vim.fn.getline(line)
-	line_text = line_text:sub(1, startcol-1) .. new_text .. line_text:sub(endcol+1, -1)
-	vim.fn.setline(line, line_text)
+        local line_text = vim.fn.getline(line)
+        line_text = line_text:sub(1, startcol-1) .. new_text .. line_text:sub(endcol+1, -1)
+        vim.fn.setline(line, line_text)
     end
 
     function M.opt_get(name)
-	return vim.eval('&' .. name)
+        return vim.eval('&' .. name)
     end
 
     function M.opt_append(name, value)
-	return vim.command("set " .. name .. "+=" .. value)
+        return vim.command("set " .. name .. "+=" .. value)
     end
 
     function M.opt_set(name, value)
-	return vim.command("set " .. name .. "=" .. value)
+        return vim.command("set " .. name .. "=" .. value)
     end
 end
 

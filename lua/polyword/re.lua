@@ -33,9 +33,9 @@ end
 
 function M.atomize(pattern)
     if #pattern == 1 or (#pattern == 2 and pattern:sub(1, 1) == "\\") then
-	return pattern
+        return pattern
     else
-	return M.group(pattern)
+        return M.group(pattern)
     end
 end
 
@@ -71,9 +71,9 @@ function M.lookahead(pattern, opts)
     opts = utils.get_options(opts, {negative=false})
 
     if opts.negative then
-	return M.atomize(pattern) ..  s'@!'
+        return M.atomize(pattern) ..  s'@!'
     else
-	return M.atomize(pattern) ..  s'@='
+        return M.atomize(pattern) ..  s'@='
     end
 end
 
@@ -81,9 +81,9 @@ function M.lookbehind(pattern, opts)
     opts = utils.get_options(opts, {negative=false})
 
     if opts.negative then
-	return M.atomize(pattern) ..  s'@<!'
+        return M.atomize(pattern) ..  s'@<!'
     else
-	return M.atomize(pattern) ..  s'@<='
+        return M.atomize(pattern) ..  s'@<='
     end
 end
 

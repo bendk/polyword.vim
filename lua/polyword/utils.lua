@@ -3,12 +3,12 @@ local M = {}
 
 function M.get_options(opts, defaults)
     if opts == nil then
-	return defaults 
+        return defaults 
     else
-	for key, value in pairs(defaults) do
-	    if opts[key] == nil then opts[key] = value end
-	end
-	return opts
+        for key, value in pairs(defaults) do
+            if opts[key] == nil then opts[key] = value end
+        end
+        return opts
     end
 end
 
