@@ -6,6 +6,7 @@ local M = {}
 
 local on_nvim = vim.fn.has('nvim') ~= 0
 
+M.fn = vim.fn
 M.col = vim.fn.col
 M.getline = vim.fn.getline
 M.nr2char = vim.fn.nr2char
@@ -13,6 +14,9 @@ M.searchpos = vim.fn.searchpos
 M.search = vim.fn.search
 M.winrestview = vim.fn.winrestview
 M.winsaveview = vim.fn.winsaveview
+M.keycodes = {
+    PLUG = "\128\253S",
+}
 
 if on_nvim then
     M.setpos = vim.fn.setpos
@@ -32,6 +36,10 @@ if on_nvim then
 
     function M.opt_set(name, value)
         vim.opt[name] = value
+    end
+
+    function M.var_get(name)
+        return vim.v[name]
     end
 else
     function M.setpos(where, pos)
@@ -54,6 +62,10 @@ else
 
     function M.opt_set(name, value)
         return vim.command("set " .. name .. "=" .. value)
+    end
+
+    function M.var_get(name)
+        return vim.eval("v:" .. name)
     end
 end
 

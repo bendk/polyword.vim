@@ -53,6 +53,9 @@ function M.transform(transform_type)
     if word_split ~= nil and transform_func ~= nil then
         local new_text = transform_func(word_split)
         vim.setline(word_split.line, word_split.startcol, word_split.endcol, new_text)
+        if vim.fn['repeat#set'] then
+            vim.fn['repeat#set'](vim.keycodes.PLUG .. '(polyword-transform-' .. transform_type .. ')', vim.var_get('count'))
+        end
     end
 end
 
