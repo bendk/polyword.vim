@@ -193,9 +193,21 @@ end
 
 function M.split_word_at_cursor()
     local name = M.get_name()
-    if name == nil then return nil end
-
     local line = vim.getline('.')
+    if name == nil then
+        -- Use a regular word if none of the types match
+        local view = vim.winsaveview()
+        local startpos = re.searchpos(re.star('\\k'), 'bcn')
+        local endpos = re.searchpos(re.star('\\k'), 'ecn')
+        return  {
+            line = startpos[1],
+            startcol = startpos[2],
+            endcol = endpos[2],
+            words = { line:sub(startpos[2], endpos[2]) },
+            word_positions = { { startpos[2], endpos[2] } }
+        }
+    end
+
     local words = {}
     for _, wordpos in pairs(name.words) do
         table.insert(words, line:sub(wordpos[1], wordpos[2]))
