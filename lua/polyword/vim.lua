@@ -6,6 +6,7 @@ local M = {}
 
 local on_nvim = vim.fn.has('nvim') ~= 0
 
+M.go = vim.go
 M.fn = vim.fn
 M.col = vim.fn.col
 M.getline = vim.fn.getline

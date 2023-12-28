@@ -45,17 +45,22 @@ local transformers = {
     ["snake-upper"] = function(word_split) return snake_or_kebab(word_split, '_', string.upper) end,
     ["kebab-upper"] = function(word_split) return snake_or_kebab(word_split, '-', string.upper) end,
 }
+local last_transform_type = nil
 
 function M.transform(transform_type)
+    -- Setup the operatorfunc and execute it.  This works with dot-repeat.
+    last_transform_type = transform_type
+    vim.go.operatorfunc = "v:lua.require'polyword.transform'.do_transform"
+    vim.cmd("normal! g@l")
+end
+
+function M.do_transform(transform_type)
     local word_split = miniwords.split_word_at_cursor()
-    local transform_func = transformers[transform_type]
+    local transform_func = transformers[last_transform_type]
 
     if word_split ~= nil and transform_func ~= nil then
         local new_text = transform_func(word_split)
         vim.setline(word_split.line, word_split.startcol, word_split.endcol, new_text)
-        if vim.fn['repeat#set'] then
-            vim.fn['repeat#set'](vim.keycodes.PLUG .. '(polyword-transform-' .. transform_type .. ')', vim.var_get('count'))
-        end
     end
 end
 
